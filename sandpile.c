@@ -99,6 +99,8 @@ static void stabilize() {
 }
 
 void find_identity() {
+  struct timeval start, end;
+  gettimeofday(&start, NULL);
   for (int i = 0; i < N; ++i) {
     for (int j = 0; j < N; ++j) {
       grid[i][j] = 6;
@@ -111,6 +113,14 @@ void find_identity() {
     }
   }
   stabilize();
+  gettimeofday(&end, NULL);
+  long seconds = end.tv_sec - start.tv_sec;
+  long microseconds = end.tv_usec - start.tv_usec;
+
+  double elapsed_sec = seconds + microseconds * 1e-6;
+  double elapsed_ms = (seconds * 1000.0) + (microseconds / 1000.0);
+
+  printf("Elapsed time: %.6f seconds (%.3f ms)\n", elapsed_sec, elapsed_ms);
 }
 
 int main(int argc, char **argv) {
