@@ -74,12 +74,16 @@ static void render(char *filename) {
 
 static void stabilize() {
   int changed = 0;
+  int halfN = N / 2;
+  int halfNsq = halfN * halfN;
   do {
     changed = 0;
     for (int i = 0; i < N; ++i) {
+      int i_temp = i - halfN;
       for (int j = 0; j <= MAX(i, N - 1 - i); ++j) {
-        if ((i - N / 2) * (i - N / 2) + (j - N / 2) * (j - N / 2) <=
-            (N / 2) * (N / 2)) {
+        int j_temp = j - halfN;
+        if (i_temp * i_temp + j_temp * j_temp <=
+            halfNsq) {
           if (grid[i][j] < 4)
             continue;
           changed = 1; // topple it
