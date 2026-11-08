@@ -21,8 +21,6 @@ static void die(const char *s) {
 int N = 801;
 int *grid;
 
-#define IDX(i, j) ((i) * n + (j))
-
 
 // you can also use this function to debug print your sandpile
 static void render(char *filename) {
@@ -33,10 +31,10 @@ static void render(char *filename) {
   if (!pixels)
     die("malloc failed for PNG pixel buffer");
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)i * n;
+    int* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
       unsigned char r = 0, g = 0, b = 0;
-      switch (row[j]) {
+      switch (row[j + 1]) {
       case 0: // obsidian
         r = 15;
         g = 15;
@@ -86,23 +84,19 @@ static void stabilize() {
     changed = 0;
     for (int i = 0; i < n; ++i) {
       int i_temp = i - halfN;
-      int* row = grid + (size_t)i * n;
+      int* row = grid + (size_t)(i + 1) * (n + 2);
       for (int j = 0; j <= MAX(i, n - 1 - i); ++j) {
         int j_temp = j - halfN;
         if (i_temp * i_temp + j_temp * j_temp <=
             halfNsq) {
-          if (row[j] < 4)
+          if (row[j + 1] < 4)
             continue;
           changed = 1; // topple it
-          row[j] -= 4;
-          if (i > 0)
-            row[j - n]++;
-          if (j > 0)
-            row[j - 1]++;
-          if (i < n - 1)
-            row[j + n]++;
-          if (j < n - 1)
-            row[j + 1]++;
+          row[j + 1] -= 4;
+          row[j + 1 - (n + 2)]++;
+          row[j]++;
+          row[j + 1 + (n + 2)]++;
+          row[j + 2]++;
         }
       }
     }
@@ -114,16 +108,16 @@ void find_identity() {
   const int n = N;
   gettimeofday(&start, NULL);
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)i * n;
+    int* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
-      row[j] = 6;
+      row[j + 1] = 6;
     }
   }
   stabilize();
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)i * n;
+    int* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
-      row[j] = 6 - row[j];
+      row[j + 1] = 6 - row[j + 1];
     }
   }
   stabilize();
@@ -149,7 +143,8 @@ int main(int argc, char **argv) {
     die("grid size must be a positive int");
   N = (int)parsed;
 
-  grid = (int *)malloc(N * N * sizeof(int));
+  size_t num_cells = (size_t)(N + 2) * (N + 2);
+  grid = (int *)calloc(num_cells, sizeof(int));
 
   find_identity();
 
