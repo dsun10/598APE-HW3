@@ -82,7 +82,7 @@ static int sweep(const int *restrict a, int *restrict b, const int *restrict m) 
   int changed = 0;
   for (int i = 0; i < n; ++i) {
     const int base = (i + 1) * (n + 2) + 1;
-    for (int j = 0; j < n; ++j) {
+    for (int j = 0; j <= MIN(MAX(i, n - 1 - i) + 1, n - 1); ++j) {
       const int x = base + j;
       const int t = a[x] & ~3 & m[x];
       changed |= t;
@@ -95,6 +95,7 @@ static int sweep(const int *restrict a, int *restrict b, const int *restrict m) 
 }
 
 static void stabilize() {
+  //memcpy(next, grid, (size_t)(N + 2) * (N + 2) * sizeof(int));
   int changed = 0;
   do {
     changed = sweep(grid, next, mask);

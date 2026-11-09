@@ -8,3 +8,5 @@
 | 1D Grid (less N accesses) | 469.562549        |
 | Buffer Border             | 397.517755        |
 | Masking + Double Buffer   | 372.951428        |
+| Fix column bounds         | 244.089095        |
+| march=native              | 190.135318        |
