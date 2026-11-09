@@ -98,6 +98,7 @@ static int sweep(const cell *restrict a, cell *restrict b, const cell *restrict 
 }
 
 static void stabilize() {
+  memcpy(next, grid, (size_t)(N + 2) * (N + 2) * sizeof(cell));
   int changed = 0;
   do {
     changed = sweep(grid, next, mask);
