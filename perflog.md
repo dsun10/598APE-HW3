@@ -7,3 +7,4 @@
 | 1D Grid (no N fix)        | 737.071546        |
 | 1D Grid (less N accesses) | 469.562549        |
 | Buffer Border             | 397.517755        |
+| Masking + Double Buffer   | 372.951428        |

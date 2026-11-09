@@ -20,6 +20,8 @@ static void die(const char *s) {
 
 int N = 801;
 int *grid;
+int *next;
+int *mask;
 
 
 // you can also use this function to debug print your sandpile
@@ -75,31 +77,30 @@ static void render(char *filename) {
   free(pixels);
 }
 
+static int sweep(const int *restrict a, int *restrict b, const int *restrict m) {
+  const int n = N;
+  int changed = 0;
+  for (int i = 0; i < n; ++i) {
+    const int base = (i + 1) * (n + 2) + 1;
+    for (int j = 0; j < n; ++j) {
+      const int x = base + j;
+      const int t = a[x] & ~3 & m[x];
+      changed |= t;
+      b[x] = a[x] - t
+           + ((a[x - 1] >> 2) & m[x - 1]) + ((a[x + 1] >> 2) & m[x + 1])
+           + ((a[x - (n + 2)] >> 2) & m[x - (n + 2)]) + ((a[x + (n + 2)] >> 2) & m[x + (n + 2)]);
+    }
+  }
+  return changed;
+}
+
 static void stabilize() {
   int changed = 0;
-  const int n = N;
-  int halfN = n / 2;
-  int halfNsq = halfN * halfN;
   do {
-    changed = 0;
-    for (int i = 0; i < n; ++i) {
-      int i_temp = i - halfN;
-      int* row = grid + (size_t)(i + 1) * (n + 2);
-      for (int j = 0; j <= MAX(i, n - 1 - i); ++j) {
-        int j_temp = j - halfN;
-        if (i_temp * i_temp + j_temp * j_temp <=
-            halfNsq) {
-          if (row[j + 1] < 4)
-            continue;
-          changed = 1; // topple it
-          row[j + 1] -= 4;
-          row[j + 1 - (n + 2)]++;
-          row[j]++;
-          row[j + 1 + (n + 2)]++;
-          row[j + 2]++;
-        }
-      }
-    }
+    changed = sweep(grid, next, mask);
+    int *tmp = grid;
+    grid = next;
+    next = tmp;
   } while (changed);
 }
 
@@ -145,11 +146,24 @@ int main(int argc, char **argv) {
 
   size_t num_cells = (size_t)(N + 2) * (N + 2);
   grid = (int *)calloc(num_cells, sizeof(int));
+  next = (int *)calloc(num_cells, sizeof(int));
+  mask = (int *)calloc(num_cells, sizeof(int));
+  int halfN = N / 2;
+  for (int i = 0; i < N; ++i) {
+    int *row = mask + (size_t)(i + 1) * (N + 2);
+    for (int j = 0; j <= MAX(i, N - 1 - i); ++j) {
+      if ((i - halfN) * (i - halfN) + (j - halfN) * (j - halfN) <= halfN * halfN) {
+        row[j + 1] = -1;
+      }
+    }
+  }
 
   find_identity();
 
   render("identity.png");
 
   free(grid);
+  free(next);
+  free(mask);
   return EXIT_SUCCESS;
 }
