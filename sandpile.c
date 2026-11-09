@@ -19,9 +19,10 @@ static void die(const char *s) {
 }
 
 int N = 801;
-int *grid;
-int *next;
-int *mask;
+typedef int16_t cell;
+cell *grid;
+cell *next;
+cell *mask;
 
 
 // you can also use this function to debug print your sandpile
@@ -33,7 +34,7 @@ static void render(char *filename) {
   if (!pixels)
     die("malloc failed for PNG pixel buffer");
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)(i + 1) * (n + 2);
+    cell* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
       unsigned char r = 0, g = 0, b = 0;
       switch (row[j + 1]) {
@@ -77,10 +78,10 @@ static void render(char *filename) {
   free(pixels);
 }
 
-static int sweep(const int *restrict a, int *restrict b, const int *restrict m) {
+static int sweep(const cell *restrict a, cell *restrict b, const cell *restrict m) {
   const int n = N;
   int changed = 0;
-  #pragma omp parallel for reduction(| : changed) schedule(guided) 
+  #pragma omp parallel for reduction(| : changed) schedule(static) 
   for (int i = 0; i < n; ++i) {
     const int base = (i + 1) * (n + 2) + 1;
     #pragma omp simd reduction(| : changed)
@@ -100,7 +101,7 @@ static void stabilize() {
   int changed = 0;
   do {
     changed = sweep(grid, next, mask);
-    int *tmp = grid;
+    cell *tmp = grid;
     grid = next;
     next = tmp;
   } while (changed);
@@ -111,14 +112,14 @@ void find_identity() {
   const int n = N;
   gettimeofday(&start, NULL);
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)(i + 1) * (n + 2);
+    cell* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
       row[j + 1] = 6;
     }
   }
   stabilize();
   for (int i = 0; i < n; ++i) {
-    int* row = grid + (size_t)(i + 1) * (n + 2);
+    cell* row = grid + (size_t)(i + 1) * (n + 2);
     for (int j = 0; j < n; ++j) {
       row[j + 1] = 6 - row[j + 1];
     }
@@ -147,12 +148,12 @@ int main(int argc, char **argv) {
   N = (int)parsed;
 
   size_t num_cells = (size_t)(N + 2) * (N + 2);
-  grid = (int *)calloc(num_cells, sizeof(int));
-  next = (int *)calloc(num_cells, sizeof(int));
-  mask = (int *)calloc(num_cells, sizeof(int));
+  grid = (cell *)calloc(num_cells, sizeof(cell));
+  next = (cell *)calloc(num_cells, sizeof(cell));
+  mask = (cell *)calloc(num_cells, sizeof(cell));
   int halfN = N / 2;
   for (int i = 0; i < N; ++i) {
-    int *row = mask + (size_t)(i + 1) * (N + 2);
+    cell *row = mask + (size_t)(i + 1) * (N + 2);
     for (int j = 0; j <= MAX(i, N - 1 - i); ++j) {
       if ((i - halfN) * (i - halfN) + (j - halfN) * (j - halfN) <= halfN * halfN) {
         row[j + 1] = -1;
